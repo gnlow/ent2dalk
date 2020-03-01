@@ -2,9 +2,10 @@
   "name": "ent2dalk",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "dist/index.umd.js",
+  "source": "index.ts",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "microbundle"
   },
   "repository": {
     "type": "git",
@@ -19,5 +20,8 @@
   "homepage": "https://github.com/gnlow/ent2dalk#readme",
   "dependencies": {
     "dalkak": "^0.7.9"
+  },
+  "devDependencies": {
+    "microbundle": "^0.12.0-next.8"
   }
 }

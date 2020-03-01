@@ -5,11 +5,6 @@ import {
     Thing
 } from "dalkak";
 
-if((<any>window).dalkak){
-    var dalkak_1 = (<any>window).dalkak;
-}
-var Entry;
-
 var toDalkBlockGroup: (entBlockGroup: Array<any>) => BlockGroup = (entBlockGroup) => {
     return new BlockGroup({blocks: entBlockGroup.map(toDalkBlock)});
 };
@@ -33,10 +28,10 @@ var toDalkBlock = (entBlock) => {
     
     return dalkBlock;
 };
-console.log(
-Entry.container.objects_.map(entryObject => {
+export default Entry => 
+Entry.container.objects_.map(entryObject => 
     new Thing({
         blockGroups: (entryObject.script.toJSON() as Array<any>).map(toDalkBlockGroup)
-    });
-})
-)
+    })
+);
+
