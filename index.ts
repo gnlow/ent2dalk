@@ -2,15 +2,24 @@ import {
     Block,
     Literal,
     BlockGroup,
-    Thing
+    Thing,
+    Project,
 } from "dalkak";
+
+import {
+    start,
+    flow,
+} from "@dalkak/entry";
+
+let project = new Project;
+project.mount(start, flow);
 
 var toDalkBlockGroup: (entBlockGroup: Array<any>) => BlockGroup = (entBlockGroup) => {
     return new BlockGroup({blocks: entBlockGroup.map(toDalkBlock)});
 };
 
 var toDalkBlock = (entBlock) => {
-    let dalkBlock = new Block;
+    let dalkBlock = project.pack.blocks.value[entBlock.type];
     let i = 0;
     entBlock.params.forEach(entParam => {
         if(entParam){
@@ -29,9 +38,8 @@ var toDalkBlock = (entBlock) => {
     return dalkBlock;
 };
 export default Entry => 
-Entry.container.objects_.map(entryObject => 
-    new Thing({
+Entry.container.objects_.forEach(entryObject => {
+    project.addThing(new Thing({
         blockGroups: (entryObject.script.toJSON() as Array<any>).map(toDalkBlockGroup)
-    })
-);
-
+    }));
+});
