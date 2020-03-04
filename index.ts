@@ -21,12 +21,13 @@ var toDalkBlockGroup: (entBlockGroup: Array<any>) => BlockGroup = (entBlockGroup
 var toDalkBlock = (entBlock) => {
     let dalkBlock = project.pack.blocks.value[entBlock.type];
     let i = 0;
+    let paramNames = [...Object.entries(dalkBlock.params.value).map(a => a[0])]; // 순서를 보장할 수 없음. 수정 필요.
     entBlock.params.forEach(entParam => {
         if(entParam){
             if(typeof entParam == "object"){
-                dalkBlock.setParam(String(i), toDalkBlock(entParam));
+                dalkBlock.setParam(paramNames[i], toDalkBlock(entParam));
             }else{
-                dalkBlock.setParam(String(i), Literal.from(entParam));
+                dalkBlock.setParam(paramNames[i], Literal.from(entParam));
             }
             i++;
         }
