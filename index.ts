@@ -62,8 +62,8 @@ import test from "./test";
     _target.blockGroups = test.map(a => toDalkBlockGroup(a, _target))
     project.addThing(_target);
     _target.run();
-    //setTimeout(()=>console.log(project.thingGroup.children[0].pos),1000)
-    
+    setTimeout(()=>console.log(project.thingGroup.children[0].pos),1000)
+    //console.log(typeof await _target.blockGroups[0].blocks[0].params.value.n.run())
     //console.log(await (_target.blockGroups[0].blocks[0].params.value.code as BlockGroup).blocks[0].params)
 })()
 //console.log(project.thingGroup.children[0].blockGroups[0].blocks[0].params.value)
