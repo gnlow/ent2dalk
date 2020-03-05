@@ -2,8 +2,8 @@ export default [
   [
     {
       "id": "gldy",
-      "x": 16.03997802734375,
-      "y": -59,
+      "x": -7.96002197265625,
+      "y": -14,
       "type": "when_run_button_click",
       "params": [
         null
@@ -43,16 +43,17 @@ export default [
       "statements": [
         [
           {
-            "id": "cn1t",
+            "id": "z4i0",
             "x": 0,
             "y": 0,
-            "type": "move_x",
+            "type": "change_variable",
             "params": [
+              "ftxp",
               {
-                "id": "ci2j",
+                "id": "js1r",
                 "x": 0,
                 "y": 0,
-                "type": "number",
+                "type": "text",
                 "params": [
                   "10"
                 ],

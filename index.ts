@@ -49,7 +49,7 @@ var toDalkBlock = (entBlock, _target: Thing) => {
 };
 let convert = Entry => 
 Entry.container.objects_.forEach(entryObject => {
-    let _target = new Thing;
+    let _target = new Thing({pos: new Vector(0, 0)});
     _target.blockGroups = (entryObject.script.toJSON() as Array<any>).map(a => toDalkBlockGroup(a, _target));
     project.addThing(_target);
 });
@@ -61,8 +61,8 @@ import test from "./test";
     var _target = new Thing({pos: new Vector(0, 0)});
     _target.blockGroups = test.map(a => toDalkBlockGroup(a, _target))
     project.addThing(_target);
-    _target.run();
-    setTimeout(()=>console.log(project.thingGroup.children[0].pos),1000)
+    _target.run(project);
+    setTimeout(()=>console.log(project.variables.value),1000)
     //console.log(typeof await _target.blockGroups[0].blocks[0].params.value.n.run())
     //console.log(await (_target.blockGroups[0].blocks[0].params.value.code as BlockGroup).blocks[0].params)
 })()
