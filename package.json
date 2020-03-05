@@ -1,9 +1,10 @@
 {
   "name": "ent2dalk",
-  "version": "1.0.0",
+  "version": "0.1.1",
   "description": "",
   "main": "dist/index.umd.js",
   "source": "index.ts",
+  "module": "dist/index.modern.js",
   "scripts": {
     "build": "microbundle"
   },
@@ -19,8 +20,8 @@
   },
   "homepage": "https://github.com/gnlow/ent2dalk#readme",
   "dependencies": {
-    "@dalkak/entry": "^0.1.1",
-    "dalkak": "^0.8.2"
+    "@dalkak/entry": "^0.1.3",
+    "dalkak": "^0.8.4"
   },
   "devDependencies": {
     "microbundle": "^0.12.0-next.8"
