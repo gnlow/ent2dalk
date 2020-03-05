@@ -6,13 +6,10 @@ import {
     Project,
 } from "dalkak";
 
-import {
-    start,
-    flow,
-} from "@dalkak/entry";
+import * as entry from "@dalkak/entry";
 
 let project = new Project;
-project.mount(start, flow);
+project.mount(...Object.entries(entry).map(a => a[1]));
 
 var toDalkBlockGroup: (entBlockGroup: Array<any>) => BlockGroup = (entBlockGroup) => {
     return new BlockGroup({blocks: entBlockGroup.map(toDalkBlock)});
