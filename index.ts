@@ -12,7 +12,7 @@ let project = new Project;
 project.mount(...Object.entries(entry).map(a => a[1]));
 var toDalkBlockGroup: (entBlockGroup: Array<any>) => BlockGroup = (entBlockGroup) => {
     let returnValue = new BlockGroup({blocks: entBlockGroup.splice(1).map(toDalkBlock)});
-    project.events.value[entBlockGroup[0].type].link(returnValue);
+    project.pack.events.value[entBlockGroup[0].type].link(returnValue);
     return returnValue;
 };
 
