@@ -1,6 +1,5 @@
 {
     "compilerOptions": {
-        "downlevelIteration": true,
-        "module":"commonjs"
+        "downlevelIteration": true
     }
 }

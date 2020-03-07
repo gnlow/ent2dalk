@@ -13,7 +13,6 @@ import {
 import * as entry from "@dalkak/entry";
 
 
-
 var toDalkBlockGroup: (entBlockGroup: Array<any>, _target: Thing, project) => BlockGroup = (entBlockGroup, _target, project) => {
     if(project.pack.events.value[entBlockGroup[0].type]){
         let returnValue = new BlockGroup({blocks: entBlockGroup.splice(1).map(a => toDalkBlock(a, _target, project))});
@@ -28,6 +27,8 @@ var toDalkBlock = (entBlock, _target: Thing, project: Project) => {
     
     let dalkBlock = project.pack.blocks.value[entBlock.type];
     let i = 0;
+    //console.log(entBlock.type)
+    //console.log(Object.keys(project.pack.blocks.value))
     let paramNames = [...Object.entries(dalkBlock.params.value).map(a => a[0])]; // 순서를 보장할 수 없음. 수정 필요.
     entBlock.params.forEach(entParam => {
         if(entParam){
@@ -56,19 +57,21 @@ var toDalkThing = (entryObject: typeof test.objects[0], project) => {
     return _target;
 }
 import test from "./test"
-let toDalkProject = (entProject: typeof test) => {
+let toDalkProject = async (entProject: typeof test) => {
     let project = new Project;
     project.mount(...Object.entries(entry).map(a => a[1]));
 
     let mountedPacks = [];
     let functionPack = new Pack;
-    entProject.functions.forEach(async entryFunction => {
+    for(let entryFunction of entProject.functions){
         let regResult = /dalk__(.*?)__(.*)/.exec(entryFunction.id);
         if(regResult){
             // Dalkak 확장 블록
             let [id, packID, blockName] = regResult;
+            console.log(mountedPacks, packID, !mountedPacks.includes(packID))
             if(!mountedPacks.includes(packID)){
-                const pack: Extension = await import(`https://unpkg.com/${packID}?module`);
+                let pack: Extension;
+                pack = await import(`https://unpkg.com/${packID}?module`);
                 Object.keys(pack.blocks.value).forEach(key => {
                     pack.blocks.value[`func_dalk__${packID}__${key}`] = pack.blocks.value[key];
                     delete pack.blocks.value[key];
@@ -85,7 +88,8 @@ let toDalkProject = (entProject: typeof test) => {
             functionPack.blocks.value[`func_${entryFunction.id}`] = funcBlock;
             */
         }
-    });
+
+    }
     entProject.objects.forEach(entryObject => {
         let _target = toDalkThing(entryObject, project);
         project.addThing(_target);
@@ -93,7 +97,11 @@ let toDalkProject = (entProject: typeof test) => {
     return project;
 }
 export default toDalkProject;
+/*
+(async () => {
+    let project = await toDalkProject(test)
+    project.run();
+    setTimeout(() => console.log(project.thingGroup.children[0].pos), 1000)
+})()
 
-let project = toDalkProject(test)
-project.run();
-setTimeout(() => console.log(project.thingGroup.children[0].pos), 1000)
+*/
