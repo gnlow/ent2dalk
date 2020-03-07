@@ -12,28 +12,27 @@ import {
 
 import * as entry from "@dalkak/entry";
 
-let project = new Project;
-project.mount(...Object.entries(entry).map(a => a[1]));
 
-var toDalkBlockGroup: (entBlockGroup: Array<any>, _target: Thing) => BlockGroup = (entBlockGroup, _target) => {
+
+var toDalkBlockGroup: (entBlockGroup: Array<any>, _target: Thing, project) => BlockGroup = (entBlockGroup, _target, project) => {
     if(project.pack.events.value[entBlockGroup[0].type]){
-        let returnValue = new BlockGroup({blocks: entBlockGroup.splice(1).map(a => toDalkBlock(a, _target))});
+        let returnValue = new BlockGroup({blocks: entBlockGroup.splice(1).map(a => toDalkBlock(a, _target, project))});
         project.pack.events.value[entBlockGroup[0].type].link(returnValue);
         return returnValue;
     }else{
-        return new BlockGroup({blocks: entBlockGroup.map(a => toDalkBlock(a, _target))});
+        return new BlockGroup({blocks: entBlockGroup.map(a => toDalkBlock(a, _target, project))});
     }
 };
 
-var toDalkBlock = (entBlock, _target: Thing) => {
+var toDalkBlock = (entBlock, _target: Thing, project) => {
     let dalkBlock = project.pack.blocks.value[entBlock.type];
     let i = 0;
     let paramNames = [...Object.entries(dalkBlock.params.value).map(a => a[0])]; // 순서를 보장할 수 없음. 수정 필요.
     entBlock.params.forEach(entParam => {
         if(entParam){
-            console.log(entBlock.type, paramNames, i, paramNames[i])
+            //console.log(entBlock.type, paramNames, i, paramNames[i])
             if(typeof entParam == "object"){
-                dalkBlock.setParam(paramNames[i], toDalkBlock(entParam, _target));
+                dalkBlock.setParam(paramNames[i], toDalkBlock(entParam, _target, project));
             }else{
                 dalkBlock.setParam(paramNames[i], Literal.from(entParam));
             }
@@ -42,7 +41,7 @@ var toDalkBlock = (entBlock, _target: Thing) => {
     });
     entBlock.statements.forEach(entBlockGroup => {
         if(entBlockGroup){
-            dalkBlock.setParam(paramNames[i], toDalkBlockGroup(entBlockGroup, _target));
+            dalkBlock.setParam(paramNames[i], toDalkBlockGroup(entBlockGroup, _target, project));
         }
         i++;
     });
@@ -50,15 +49,19 @@ var toDalkBlock = (entBlock, _target: Thing) => {
     dalkBlock.paramTypes.value._target = Type.fromConstructor(Thing);
     return dalkBlock;
 };
-var toDalkThing = entryObject => {
+var toDalkThing = (entryObject: typeof test.objects[0], project) => {
     let _target = new Thing({pos: new Vector(0, 0)});
-    _target.blockGroups = (entryObject.script.toJSON() as Array<any>).map(a => toDalkBlockGroup(a, _target));
+    _target.blockGroups = JSON.parse(entryObject.script).map(a => toDalkBlockGroup(a, _target, project));
     return _target;
 }
-let toDalkProject = Entry => {
+import test from "./test"
+let toDalkProject = (entProject: typeof test) => {
+    let project = new Project;
+    project.mount(...Object.entries(entry).map(a => a[1]));
+
     let mountedPacks = [];
     let functionPack = new Pack;
-    (Entry.variableContainer.functions_ as any[]).forEach(async entryFunction => {
+    entProject.functions.forEach(async entryFunction => {
         let regResult = /dalk__(.*?)__(.*)/.exec(entryFunction.id);
         if(regResult){
             // Dalkak 확장 블록
@@ -73,17 +76,23 @@ let toDalkProject = Entry => {
             }
         }else{
             // 일반 함수 블록
+            /*
             let funcBlock = new BlockGroup({
                 name: entryFunction.id,
                 template: (<string>entryFunction.block.template).replace(/%(\d+)/g, (m,x) => `(param${x})`)
             });
             functionPack.blocks.value[`func_${entryFunction.id}`] = funcBlock;
+            */
         }
     });
-    Entry.container.objects_.forEach(entryObject => {
-        let _target = toDalkThing(entryObject);
+    entProject.objects.forEach(entryObject => {
+        let _target = toDalkThing(entryObject, project);
         project.addThing(_target);
     });
     return project;
 }
 export default toDalkProject;
+
+let project = toDalkProject(test)
+project.run()
+console.log(project)
