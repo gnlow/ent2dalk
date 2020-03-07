@@ -6,12 +6,15 @@ import {
     Project,
     Vector,
     Type,
+    Extension,
+    Pack,
 } from "dalkak";
 
 import * as entry from "@dalkak/entry";
 
 let project = new Project;
 project.mount(...Object.entries(entry).map(a => a[1]));
+
 var toDalkBlockGroup: (entBlockGroup: Array<any>, _target: Thing) => BlockGroup = (entBlockGroup, _target) => {
     if(project.pack.events.value[entBlockGroup[0].type]){
         let returnValue = new BlockGroup({blocks: entBlockGroup.splice(1).map(a => toDalkBlock(a, _target))});
@@ -47,23 +50,40 @@ var toDalkBlock = (entBlock, _target: Thing) => {
     dalkBlock.paramTypes.value._target = Type.fromConstructor(Thing);
     return dalkBlock;
 };
-let convert = Entry => 
-Entry.container.objects_.forEach(entryObject => {
+var toDalkThing = entryObject => {
     let _target = new Thing({pos: new Vector(0, 0)});
     _target.blockGroups = (entryObject.script.toJSON() as Array<any>).map(a => toDalkBlockGroup(a, _target));
-    project.addThing(_target);
-});
-export default convert;
-
-import test from "./test";
-
-(async () => {
-    var _target = new Thing({pos: new Vector(0, 0)});
-    _target.blockGroups = test.map(a => toDalkBlockGroup(a, _target))
-    project.addThing(_target);
-    _target.run(project);
-    setTimeout(()=>console.log(project.variables.value),1000)
-    //console.log(typeof await _target.blockGroups[0].blocks[0].params.value.n.run())
-    //console.log(await (_target.blockGroups[0].blocks[0].params.value.code as BlockGroup).blocks[0].params)
-})()
-//console.log(project.thingGroup.children[0].blockGroups[0].blocks[0].params.value)
+    return _target;
+}
+let toDalkProject = Entry => {
+    let mountedPacks = [];
+    let functionPack = new Pack;
+    (Entry.variableContainer.functions_ as any[]).forEach(async entryFunction => {
+        let regResult = /dalk__(.*?)__(.*)/.exec(entryFunction.id);
+        if(regResult){
+            // Dalkak 확장 블록
+            let [id, packID, blockName] = regResult;
+            if(!mountedPacks.includes(packID)){
+                const pack: Extension = await import(`https://unpkg.com/${packID}?module`);
+                Object.keys(pack.blocks.value).forEach(key => {
+                    pack.blocks.value[`func_dalk__${packID}__${key}`] = pack.blocks.value[key];
+                    delete pack.blocks.value[key];
+                }); // 패키지명 중복 대비. Dalkak에서 패치되면 삭제 예정
+                project.mount(pack);
+            }
+        }else{
+            // 일반 함수 블록
+            let funcBlock = new BlockGroup({
+                name: entryFunction.id,
+                template: (<string>entryFunction.block.template).replace(/%(\d+)/g, (m,x) => `(param${x})`)
+            });
+            functionPack.blocks.value[`func_${entryFunction.id}`] = funcBlock;
+        }
+    });
+    Entry.container.objects_.forEach(entryObject => {
+        let _target = toDalkThing(entryObject);
+        project.addThing(_target);
+    });
+    return project;
+}
+export default toDalkProject;
