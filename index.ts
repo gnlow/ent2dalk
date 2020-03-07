@@ -24,7 +24,8 @@ var toDalkBlockGroup: (entBlockGroup: Array<any>, _target: Thing, project) => Bl
     }
 };
 
-var toDalkBlock = (entBlock, _target: Thing, project) => {
+var toDalkBlock = (entBlock, _target: Thing, project: Project) => {
+    
     let dalkBlock = project.pack.blocks.value[entBlock.type];
     let i = 0;
     let paramNames = [...Object.entries(dalkBlock.params.value).map(a => a[0])]; // 순서를 보장할 수 없음. 수정 필요.
@@ -94,5 +95,5 @@ let toDalkProject = (entProject: typeof test) => {
 export default toDalkProject;
 
 let project = toDalkProject(test)
-project.run()
-console.log(project)
+project.run();
+setTimeout(() => console.log(project.thingGroup.children[0].pos), 1000)
