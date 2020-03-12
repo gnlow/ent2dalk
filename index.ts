@@ -11,7 +11,14 @@ import {
 } from "dalkak";
 
 import * as entry from "@dalkak/entry";
-
+import hash = require("@dalkak/hash");
+import json = require("@dalkak/json");
+import kachi = require("@dalkak/kachi");
+const packs = {
+    "@dalkak/hash": hash,
+    "@dalkak/json": json,
+    "@dalkak/kachi": kachi,
+}; // Dynamic Import가 잘 안 돼서 임시로 씀.
 
 var toDalkBlockGroup: (entBlockGroup: Array<any>, _target: Thing, project) => BlockGroup = (entBlockGroup, _target, project) => {
     if(project.pack.events.value[entBlockGroup[0].type]){
@@ -33,10 +40,11 @@ var toDalkBlock = (entBlock, _target: Thing, project: Project) => {
     entBlock.params.forEach(entParam => {
         if(entParam){
             //console.log(entBlock.type, paramNames, i, paramNames[i])
+            console.log(i, paramNames)
             if(typeof entParam == "object"){
-                dalkBlock.setParam(paramNames[i], toDalkBlock(entParam, _target, project));
+                dalkBlock.setParam(paramNames[i] || "_targetVal", toDalkBlock(entParam, _target, project));
             }else{
-                dalkBlock.setParam(paramNames[i], Literal.from(entParam));
+                dalkBlock.setParam(paramNames[i] || "_targetVal", Literal.from(entParam));
             }
             i++;
         }
@@ -57,7 +65,7 @@ var toDalkThing = (entryObject: typeof test.objects[0], project) => {
     return _target;
 }
 import test from "./test"
-let toDalkProject = async (entProject: typeof test) => {
+let toDalkProject = (entProject: typeof test) => {
     let project = new Project;
     project.mount(...Object.entries(entry).map(a => a[1]));
 
@@ -70,10 +78,23 @@ let toDalkProject = async (entProject: typeof test) => {
             let [id, packID, blockName] = regResult;
             console.log(mountedPacks, packID, !mountedPacks.includes(packID))
             if(!mountedPacks.includes(packID)){
-                let pack: Extension;
-                pack = await import(`https://unpkg.com/${packID}?module`);
+                let pack: Pack;
+                pack = packs[packID];
                 Object.keys(pack.blocks.value).forEach(key => {
-                    pack.blocks.value[`func_dalk__${packID}__${key}`] = pack.blocks.value[key];
+                    if(pack.blocks.value[key].returnType.extend == "" || pack.blocks.value[key].returnType.extend == false){
+                        // 리턴값이 있는 Dalkak 확장 함수.
+                        // Entry에서는 Dalkify에 의해 
+                        // (원래 내용) -> (저장할 변수) 꼴로 변환됨.
+                        // 다시 변환해야함.
+                        pack.blocks.value[`func_dalk__${packID}__${key}`] = entry.variable.blocks.value.set_variable;
+                        pack.blocks.value[`func_dalk__${packID}__${key}`].setParam("name", pack.blocks.value[key].params.value._targetVal);
+                        delete pack.blocks.value[key].params.value._targetVal;
+                        delete pack.blocks.value[key].params.value._target;
+                        pack.blocks.value[`func_dalk__${packID}__${key}`].setParam("value", pack.blocks.value[key]);
+                    }else{
+                        pack.blocks.value[`func_dalk__${packID}__${key}`] = pack.blocks.value[key];
+                    }
+                    
                     delete pack.blocks.value[key];
                 }); // 패키지명 중복 대비. Dalkak에서 패치되면 삭제 예정
                 project.mount(pack);
@@ -97,11 +118,11 @@ let toDalkProject = async (entProject: typeof test) => {
     return project;
 }
 export default toDalkProject;
-/*
+
 (async () => {
     let project = await toDalkProject(test)
-    project.run();
-    setTimeout(() => console.log(project.thingGroup.children[0].pos), 1000)
+    project.run()
+    //console.log(project.thingGroup.children[0].blockGroups[0].blocks[0].params.value)
+    setTimeout(() => console.log(project.variables), 1000)
 })()
 
-*/

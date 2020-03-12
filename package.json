@@ -1,6 +1,6 @@
 {
   "name": "ent2dalk",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "",
   "main": "dist/index.umd.js",
   "source": "index.ts",
@@ -21,6 +21,9 @@
   "homepage": "https://github.com/gnlow/ent2dalk#readme",
   "dependencies": {
     "@dalkak/entry": "^0.1.8",
+    "@dalkak/hash": "^0.1.1",
+    "@dalkak/json": "^0.3.1",
+    "@dalkak/kachi": "^0.1.5",
     "dalkak": "^0.8.9"
   },
   "devDependencies": {
