@@ -6,7 +6,6 @@ import {
     Project,
     Vector,
     Type,
-    Extension,
     Pack,
 } from "dalkak";
 
@@ -34,12 +33,9 @@ var toDalkBlock = (entBlock, _target: Thing, project: Project) => {
     
     let dalkBlock = project.pack.blocks.value[entBlock.type];
     let i = 0;
-    //console.log(entBlock.type)
-    //console.log(Object.keys(project.pack.blocks.value))
     let paramNames = [...Object.entries(dalkBlock.params.value).map(a => a[0])]; // 순서를 보장할 수 없음. 수정 필요.
     entBlock.params.forEach(entParam => {
         if(entParam){
-            //console.log(entBlock.type, paramNames, i, paramNames[i])
             console.log(i, paramNames)
             if(typeof entParam == "object"){
                 dalkBlock.setParam(paramNames[i] || "_targetVal", toDalkBlock(entParam, _target, project));
@@ -70,7 +66,6 @@ let toDalkProject = (entProject: typeof test) => {
     project.mount(...Object.entries(entry).map(a => a[1]));
 
     let mountedPacks = [];
-    let functionPack = new Pack;
     for(let entryFunction of entProject.functions){
         let regResult = /dalk__(.*?)__(.*)/.exec(entryFunction.id);
         if(regResult){
@@ -101,13 +96,7 @@ let toDalkProject = (entProject: typeof test) => {
             }
         }else{
             // 일반 함수 블록
-            /*
-            let funcBlock = new BlockGroup({
-                name: entryFunction.id,
-                template: (<string>entryFunction.block.template).replace(/%(\d+)/g, (m,x) => `(param${x})`)
-            });
-            functionPack.blocks.value[`func_${entryFunction.id}`] = funcBlock;
-            */
+            // WIP
         }
 
     }
@@ -118,11 +107,3 @@ let toDalkProject = (entProject: typeof test) => {
     return project;
 }
 export default toDalkProject;
-
-(async () => {
-    let project = await toDalkProject(test)
-    project.run()
-    //console.log(project.thingGroup.children[0].blockGroups[0].blocks[0].params.value)
-    setTimeout(() => console.log(project.variables), 1000)
-})()
-
