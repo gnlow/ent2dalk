@@ -1,6 +1,6 @@
 {
     "compilerOptions": {
         "downlevelIteration": true,
-        "module": "CommonJS"
+        "esModuleInterop": true
     }
 }

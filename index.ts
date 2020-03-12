@@ -10,9 +10,9 @@ import {
 } from "dalkak";
 
 import * as entry from "@dalkak/entry";
-import hash = require("@dalkak/hash");
-import json = require("@dalkak/json");
-import kachi = require("@dalkak/kachi");
+import hash from "@dalkak/hash";
+import json from "@dalkak/json";
+import kachi from "@dalkak/kachi";
 const packs = {
     "@dalkak/hash": hash,
     "@dalkak/json": json,
@@ -36,7 +36,6 @@ var toDalkBlock = (entBlock, _target: Thing, project: Project) => {
     let paramNames = [...Object.entries(dalkBlock.params.value).map(a => a[0])]; // 순서를 보장할 수 없음. 수정 필요.
     entBlock.params.forEach(entParam => {
         if(entParam){
-            console.log(i, paramNames)
             if(typeof entParam == "object"){
                 dalkBlock.setParam(paramNames[i] || "_targetVal", toDalkBlock(entParam, _target, project));
             }else{
@@ -63,7 +62,9 @@ var toDalkThing = (entryObject: typeof test.objects[0], project) => {
 import test from "./test"
 let toDalkProject = (entProject: typeof test) => {
     let project = new Project;
-    project.mount(...Object.entries(entry).map(a => a[1]));
+    let entryClone = entry;
+    delete (entryClone as any).default;
+    project.mount(...Object.entries(entryClone).map(a => a[1]));
 
     let mountedPacks = [];
     for(let entryFunction of entProject.functions){
@@ -71,7 +72,6 @@ let toDalkProject = (entProject: typeof test) => {
         if(regResult){
             // Dalkak 확장 블록
             let [id, packID, blockName] = regResult;
-            console.log(mountedPacks, packID, !mountedPacks.includes(packID))
             if(!mountedPacks.includes(packID)){
                 let pack: Pack;
                 pack = packs[packID];
