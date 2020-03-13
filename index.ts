@@ -7,6 +7,10 @@ import {
     Vector,
     Type,
     Pack,
+    Template,
+    Variable,
+    Util,
+    Dict,
 } from "dalkak";
 
 import * as entry from "@dalkak/entry";
@@ -19,6 +23,14 @@ const packs = {
     "@dalkak/kachi": kachi,
 }; // Dynamic Import가 잘 안 돼서 임시로 씀.
 
+let blockCopy = ({name, template, func, params, pack, useLiteralParam}: Block) => new Block({
+    name: `Copy_${Util.randString(3)} of ${name}`,
+    template: template.template,
+    func,
+    params: Object.assign({}, params.value),
+    pack,
+    useLiteralParam,
+});
 var toDalkBlockGroup: (entBlockGroup: Array<any>, _target: Thing, project) => BlockGroup = (entBlockGroup, _target, project) => {
     if(project.pack.events.value[entBlockGroup[0].type]){
         let returnValue = new BlockGroup({blocks: entBlockGroup.splice(1).map(a => toDalkBlock(a, _target, project))});
@@ -31,7 +43,7 @@ var toDalkBlockGroup: (entBlockGroup: Array<any>, _target: Thing, project) => Bl
 
 var toDalkBlock = (entBlock, _target: Thing, project: Project) => {
     
-    let dalkBlock = project.pack.blocks.value[entBlock.type];
+    let dalkBlock = blockCopy(project.pack.blocks.value[entBlock.type]);
     let i = 0;
     let paramNames = [...Object.entries(dalkBlock.params.value).map(a => a[0])]; // 순서를 보장할 수 없음. 수정 필요.
     entBlock.params.forEach(entParam => {
@@ -71,7 +83,7 @@ let toDalkProject = (entProject: typeof test) => {
         let regResult = /dalk__(.*?)__(.*)/.exec(entryFunction.id);
         if(regResult){
             // Dalkak 확장 블록
-            let [id, packID, blockName] = regResult;
+            const [id, packID, blockName] = regResult;
             if(!mountedPacks.includes(packID)){
                 let pack: Pack;
                 pack = packs[packID];
@@ -81,11 +93,17 @@ let toDalkProject = (entProject: typeof test) => {
                         // Entry에서는 Dalkify에 의해 
                         // (원래 내용) -> (저장할 변수) 꼴로 변환됨.
                         // 다시 변환해야함.
-                        pack.blocks.value[`func_dalk__${packID}__${key}`] = entry.variable.blocks.value.set_variable;
-                        pack.blocks.value[`func_dalk__${packID}__${key}`].setParam("name", pack.blocks.value[key].params.value._targetVal);
-                        delete pack.blocks.value[key].params.value._targetVal;
-                        delete pack.blocks.value[key].params.value._target;
-                        pack.blocks.value[`func_dalk__${packID}__${key}`].setParam("value", pack.blocks.value[key]);
+                        let targetDalkBlock = pack.blocks.value[key];
+                        pack.blocks.value[`func_dalk__${packID}__${key}`] = new Block({
+                            name: `func_dalk__${packID}__${key}`,
+                            template: `{ ${Template.parseReturnType(targetDalkBlock.template.template, targetDalkBlock.pack).content} → (_targetVal) }`,
+                            func: async ({_targetVal, ...params}, project) => {
+                                if(!project.variables.value[_targetVal]){
+                                    project.variables.value[_targetVal] = new Variable({name: _targetVal, value: 0});
+                                }
+                                project.variables.value[_targetVal].value = await targetDalkBlock.func(params, project);
+                            }
+                        });
                     }else{
                         pack.blocks.value[`func_dalk__${packID}__${key}`] = pack.blocks.value[key];
                     }
@@ -93,6 +111,7 @@ let toDalkProject = (entProject: typeof test) => {
                     delete pack.blocks.value[key];
                 }); // 패키지명 중복 대비. Dalkak에서 패치되면 삭제 예정
                 project.mount(pack);
+                mountedPacks.push(packID);
             }
         }else{
             // 일반 함수 블록
