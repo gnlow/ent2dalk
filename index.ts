@@ -22,7 +22,6 @@ const packs = {
     "@dalkak/json": json,
     "@dalkak/kachi": kachi,
 }; // Dynamic Import가 잘 안 돼서 임시로 씀.
-
 let blockCopy = ({name, template, func, params, pack, useLiteralParam}: Block) => new Block({
     name: `Copy_${Util.randString(3)} of ${name}`,
     template: template.template,
