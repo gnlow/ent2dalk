@@ -77,6 +77,28 @@ let toDalkProject = (entProject: typeof test) => {
     delete (entryClone as any).default;
     project.mount(...Object.entries(entryClone).map(a => a[1]));
 
+    entProject.variables.forEach(entVar => {
+        if(!entVar.name.startsWith("_")){
+            switch(entVar.variableType){
+                // case "timer":
+                // case "answer":
+                case "variable":
+                    project.variables.value[entVar.name] = new Variable({
+                        name: entVar.name,
+                        value: entVar.value,
+                    })
+                    break;
+                case "list":
+                    project.variables.value[entVar.name] = new Variable({
+                        name: entVar.name,
+                        value: entVar.array.map(val => val.data),
+                    })
+                    break;
+            }
+        }
+        
+    });
+
     let mountedPacks = [];
     for(let entryFunction of entProject.functions){
         let regResult = /dalk__(.*?)__(.*)/.exec(entryFunction.id);
