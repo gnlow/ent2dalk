@@ -24,7 +24,7 @@
     "@dalkak/hash": "^0.1.1",
     "@dalkak/json": "^0.3.2",
     "@dalkak/kachi": "^0.1.5",
-    "dalkak": "^0.9.1-next.6"
+    "dalkak": "^0.9.1-next.7"
   },
   "devDependencies": {
     "@dalkak/basic": "^0.1.4",
