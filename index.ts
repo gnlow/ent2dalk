@@ -96,11 +96,9 @@ let toDalkProject = (entProject: typeof test) => {
                         pack.blocks.value[`func_dalk__${packID}__${key}`] = new Block({
                             name: `func_dalk__${packID}__${key}`,
                             template: `{ ${Template.parseReturnType(targetDalkBlock.template.template, targetDalkBlock.pack).content} → (_targetVal) }`,
-                            func: async ({_targetVal, ...params}, project) => {
-                                if(!project.variables.value[_targetVal]){
-                                    project.variables.value[_targetVal] = new Variable({name: _targetVal, value: 0});
-                                }
-                                project.variables.value[_targetVal].value = await targetDalkBlock.func(params, project);
+                            func: async ({_targetVal, ...params}, project, local) => {
+                                const variable = local.getVariable(_targetVal);
+                                variable.value = await targetDalkBlock.func(params, project, local);
                             }
                         });
                     }else{
