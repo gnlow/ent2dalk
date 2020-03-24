@@ -9,31 +9,28 @@ import {
     Pack,
     Template,
     Variable,
-    Util,
-    Dict,
+    Event,
 } from "dalkak";
 
 import * as entry from "@dalkak/entry";
 import hash from "@dalkak/hash";
 import json from "@dalkak/json";
 import kachi from "@dalkak/kachi";
+import kachiServer from "@dalkak/kachi-server";
 const packs = {
     "@dalkak/hash": hash,
     "@dalkak/json": json,
     "@dalkak/kachi": kachi,
+    "@dalkak/kachi-server": kachiServer,
 }; // Dynamic Import가 잘 안 돼서 임시로 씀.
-let blockCopy = ({name, template, func, params, pack, useLiteralParam}: Block) => new Block({
-    name: `Copy_${Util.randString(3)} of ${name}`,
-    template: template.template,
-    func,
-    params: Object.assign({}, params.value),
-    pack,
-    useLiteralParam,
-});
-var toDalkBlockGroup: (entBlockGroup: Array<any>, _target: Thing, project) => BlockGroup = (entBlockGroup, _target, project) => {
+var toDalkBlockGroup: (entBlockGroup: Array<any>, _target: Thing, project: Project) => BlockGroup = (entBlockGroup, _target, project) => {
     if(project.pack.events.value[entBlockGroup[0].type]){
         let returnValue = new BlockGroup({blocks: entBlockGroup.splice(1).map(a => toDalkBlock(a, _target, project))});
         project.pack.events.value[entBlockGroup[0].type].link(returnValue);
+        return returnValue;
+    }else if(entBlockGroup[0].type == "when_message_cast"){
+        let returnValue = new BlockGroup({blocks: entBlockGroup.splice(1).map(a => toDalkBlock(a, _target, project))});
+        project.events.value[entBlockGroup[0].params[1]].link(returnValue);
         return returnValue;
     }else{
         return new BlockGroup({blocks: entBlockGroup.map(a => toDalkBlock(a, _target, project))});
@@ -41,8 +38,8 @@ var toDalkBlockGroup: (entBlockGroup: Array<any>, _target: Thing, project) => Bl
 };
 
 var toDalkBlock = (entBlock, _target: Thing, project: Project) => {
-    
-    let dalkBlock = blockCopy(project.pack.blocks.value[entBlock.type]);
+    console.log(entBlock.type)
+    let dalkBlock = Block.fromBlock(project.pack.blocks.value[entBlock.type]);
     let i = 0;
     let paramNames = [...Object.entries(dalkBlock.params.value).map(a => a[0])]; // 순서를 보장할 수 없음. 수정 필요.
     entBlock.params.forEach(entParam => {
@@ -95,8 +92,10 @@ let toDalkProject = (entProject: typeof test) => {
                     })
                     break;
             }
-        }
-        
+        } 
+    });
+    entProject.messages.forEach((entMsg: {id: string, name: string}) => {
+        project.events.value[entMsg.id] = new Event(entMsg.name);
     });
 
     let mountedPacks = [];
