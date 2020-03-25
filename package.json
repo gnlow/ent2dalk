@@ -20,12 +20,12 @@
   },
   "homepage": "https://github.com/gnlow/ent2dalk#readme",
   "dependencies": {
-    "@dalkak/entry": "^0.1.12",
+    "@dalkak/entry": "^0.1.13",
     "@dalkak/hash": "^0.1.1",
     "@dalkak/json": "^0.3.2",
     "@dalkak/kachi": "^0.1.5",
     "@dalkak/kachi-server": "^0.1.5",
-    "dalkak": "^0.9.1-next.7"
+    "dalkak": "^0.9.1-next.9"
   },
   "devDependencies": {
     "@dalkak/basic": "^0.1.4",

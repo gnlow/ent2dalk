@@ -108,7 +108,7 @@ let toDalkProject = (entProject: typeof test) => {
                 let pack: Pack;
                 pack = packs[packID];
                 Object.keys(pack.blocks.value).forEach(key => {
-                    if(pack.blocks.value[key].returnType.extend == "" || pack.blocks.value[key].returnType.extend == false){
+                    if(pack.blocks.value[key].returnType.extend != Block){
                         // 리턴값이 있는 Dalkak 확장 함수.
                         // Entry에서는 Dalkify에 의해 
                         // (원래 내용) -> (저장할 변수) 꼴로 변환됨.
