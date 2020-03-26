@@ -38,7 +38,6 @@ var toDalkBlockGroup: (entBlockGroup: Array<any>, _target: Thing, project: Proje
 };
 
 var toDalkBlock = (entBlock, _target: Thing, project: Project) => {
-    console.log(entBlock.type)
     let dalkBlock = Block.fromBlock(project.pack.blocks.value[entBlock.type]);
     let i = 0;
     let paramNames = [...Object.entries(dalkBlock.params.value).map(a => a[0])]; // 순서를 보장할 수 없음. 수정 필요.
@@ -118,7 +117,7 @@ let toDalkProject = (entProject: typeof test) => {
                             name: `func_dalk__${packID}__${key}`,
                             template: `{ ${Template.parseReturnType(targetDalkBlock.template.template, targetDalkBlock.pack).content} → (_targetVal) }`,
                             func: async ({_targetVal, ...params}, project, local) => {
-                                const variable = local.getVariable(_targetVal);
+                                const variable = local.getVariable(entProject.variables.find(entVar => entVar.name == _targetVal)?.id);
                                 variable.value = await targetDalkBlock.func(params, project, local);
                             }
                         });
