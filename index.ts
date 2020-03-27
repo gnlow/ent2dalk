@@ -30,7 +30,7 @@ var toDalkBlockGroup: (entBlockGroup: Array<any>, _target: Thing, project: Proje
         return returnValue;
     }else if(entBlockGroup[0].type == "when_message_cast"){
         let returnValue = new BlockGroup({blocks: entBlockGroup.splice(1).map(a => toDalkBlock(a, _target, project))});
-        [...project.events].find(v => v.name == entBlockGroup[0].params[1]).link(returnValue);
+        project.events.value[entBlockGroup[0].params[1]].link(returnValue);
         return returnValue;
     }else{
         return new BlockGroup({blocks: entBlockGroup.map(a => toDalkBlock(a, _target, project))});
@@ -94,7 +94,7 @@ let toDalkProject = (entProject: typeof test) => {
         } 
     });
     entProject.messages.forEach((entMsg: {id: string, name: string}) => {
-        project.events.value[entMsg.name] = new Event(entMsg.id);
+        project.events.value[entMsg.id] = new Event(entMsg.name);
     });
 
     let mountedPacks = [];
