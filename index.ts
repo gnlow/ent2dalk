@@ -23,28 +23,28 @@ const packs = {
     "@dalkak/kachi": kachi,
     "@dalkak/kachi-server": kachiServer,
 }; // Dynamic Import가 잘 안 돼서 임시로 씀.
-var toDalkBlockGroup: (entBlockGroup: Array<any>, _target: Thing, project: Project) => BlockGroup = (entBlockGroup, _target, project) => {
+var toDalkBlockGroup: (entBlockGroup: Array<any>, _target: Thing, project: Project, entId) => BlockGroup = (entBlockGroup, _target, project, entId) => {
     if(project.pack.events.value[entBlockGroup[0].type]){
-        let returnValue = new BlockGroup({blocks: entBlockGroup.splice(1).map(a => toDalkBlock(a, _target, project))});
+        let returnValue = new BlockGroup({blocks: entBlockGroup.splice(1).map(a => toDalkBlock(a, _target, project, entId))});
         project.pack.events.value[entBlockGroup[0].type].link(returnValue);
         return returnValue;
     }else if(entBlockGroup[0].type == "when_message_cast"){
-        let returnValue = new BlockGroup({blocks: entBlockGroup.splice(1).map(a => toDalkBlock(a, _target, project))});
-        project.events.value[entBlockGroup[0].params[1]].link(returnValue);
+        let returnValue = new BlockGroup({blocks: entBlockGroup.splice(1).map(a => toDalkBlock(a, _target, project, entId))});
+        project.events.value[entId[entBlockGroup[0].params[1]]].link(returnValue);
         return returnValue;
     }else{
-        return new BlockGroup({blocks: entBlockGroup.map(a => toDalkBlock(a, _target, project))});
+        return new BlockGroup({blocks: entBlockGroup.map(a => toDalkBlock(a, _target, project, entId))});
     }
 };
 
-var toDalkBlock = (entBlock, _target: Thing, project: Project) => {
+var toDalkBlock = (entBlock, _target: Thing, project: Project, entId) => {
     let dalkBlock = Block.fromBlock(project.pack.blocks.value[entBlock.type]);
     let i = 0;
     let paramNames = [...Object.entries(dalkBlock.params.value).map(a => a[0])]; // 순서를 보장할 수 없음. 수정 필요.
     entBlock.params.forEach(entParam => {
         if(entParam){
             if(typeof entParam == "object"){
-                dalkBlock.setParam(paramNames[i] || "_targetVal", toDalkBlock(entParam, _target, project));
+                dalkBlock.setParam(paramNames[i] || "_targetVal", toDalkBlock(entParam, _target, project, entId));
             }else{
                 dalkBlock.setParam(paramNames[i] || "_targetVal", Literal.from(entParam));
             }
@@ -53,7 +53,7 @@ var toDalkBlock = (entBlock, _target: Thing, project: Project) => {
     });
     entBlock.statements.forEach(entBlockGroup => {
         if(entBlockGroup){
-            dalkBlock.setParam(paramNames[i], toDalkBlockGroup(entBlockGroup, _target, project));
+            dalkBlock.setParam(paramNames[i], toDalkBlockGroup(entBlockGroup, _target, project, entId));
         }
         i++;
     });
@@ -61,9 +61,9 @@ var toDalkBlock = (entBlock, _target: Thing, project: Project) => {
     dalkBlock.paramTypes.value._target = Type.fromConstructor(Thing);
     return dalkBlock;
 };
-var toDalkThing = (entryObject: typeof test.objects[0], project) => {
+var toDalkThing = (entryObject: typeof test.objects[0], project, entId) => {
     let _target = new Thing({pos: new Vector(0, 0)});
-    _target.blockGroups = JSON.parse(entryObject.script).map(a => toDalkBlockGroup(a, _target, project));
+    _target.blockGroups = JSON.parse(entryObject.script).map(a => toDalkBlockGroup(a, _target, project, entId));
     return _target;
 }
 import test from "./test"
@@ -73,8 +73,10 @@ let toDalkProject = (entProject: typeof test) => {
     delete (entryClone as any).default;
     project.mount(...Object.entries(entryClone).map(a => a[1]));
 
+    let entId: Record<string, string> = {};
     entProject.variables.forEach(entVar => {
         if(!entVar.name.startsWith("_")){
+            entId[entVar.id] = entVar.name;
             switch(entVar.variableType){
                 // case "timer":
                 // case "answer":
@@ -94,7 +96,8 @@ let toDalkProject = (entProject: typeof test) => {
         } 
     });
     entProject.messages.forEach((entMsg: {id: string, name: string}) => {
-        project.events.value[entMsg.id] = new Event(entMsg.name);
+        project.events.value[entMsg.name] = new Event(entMsg.name);
+        entId[entMsg.id] = entMsg.name;
     });
 
     let mountedPacks = [];
@@ -117,7 +120,7 @@ let toDalkProject = (entProject: typeof test) => {
                             name: `func_dalk__${packID}__${key}`,
                             template: `{ ${Template.parseReturnType(targetDalkBlock.template.template, targetDalkBlock.pack).content} → (_targetVal) }`,
                             func: async ({_targetVal, ...params}, project, local) => {
-                                const variable = local.getVariable(entProject.variables.find(entVar => entVar.name == _targetVal)?.id);
+                                const variable = local.getVariable(_targetVal);
                                 variable.value = await targetDalkBlock.func(params, project, local);
                             }
                         });
@@ -137,9 +140,9 @@ let toDalkProject = (entProject: typeof test) => {
 
     }
     entProject.objects.forEach(entryObject => {
-        let _target = toDalkThing(entryObject, project);
+        let _target = toDalkThing(entryObject, project, entId);
         project.addThing(_target);
     });
-    return project;
+    return {project, idList: entId};
 }
 export default toDalkProject;

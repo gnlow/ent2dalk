@@ -5,7 +5,7 @@ import { Block, BlockGroup, Literal, Variable, Type, Template, Local } from "dal
 
 import basic from "@dalkak/basic";
 
-let project = toDalk(test);
+let {project} = toDalk(test);
 
 const wait = new Block({
     name: "wait",
@@ -46,7 +46,7 @@ project.thingGroup.children[0].addBlock(
     BlockGroup.fromBlock(wait)
     .attach(BlockGroup.fromBlock(log))
 )
-project.run();
+project.run({} as any);
 setTimeout(async () => {
     console.log("global", project.variables.value);
 }, 1000);
