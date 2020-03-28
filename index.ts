@@ -75,8 +75,8 @@ let toDalkProject = (entProject: typeof test) => {
 
     let entId: Record<string, string> = {};
     entProject.variables.forEach(entVar => {
+        entId[entVar.id] = entVar.name;
         if(!entVar.name.startsWith("_")){
-            entId[entVar.id] = entVar.name;
             switch(entVar.variableType){
                 // case "timer":
                 // case "answer":
