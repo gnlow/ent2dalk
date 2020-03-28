@@ -1,6 +1,6 @@
 {
   "name": "ent2dalk",
-  "version": "0.1.11",
+  "version": "0.1.12",
   "description": "",
   "main": "dist/index.umd.js",
   "source": "index.ts",
@@ -24,8 +24,8 @@
     "@dalkak/hash": "^0.1.1",
     "@dalkak/json": "^0.3.2",
     "@dalkak/kachi": "^0.1.5",
-    "@dalkak/kachi-server": "^0.1.6",
-    "dalkak": "^0.9.1-next.13"
+    "@dalkak/kachi-server": "^0.1.8",
+    "dalkak": "^0.9.2"
   },
   "devDependencies": {
     "@dalkak/basic": "^0.1.4",

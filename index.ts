@@ -41,7 +41,7 @@ var toDalkBlock = (entBlock, _target: Thing, project: Project, entId) => {
     let dalkBlock = Block.fromBlock(project.pack.blocks.value[entBlock.type]);
     let i = 0;
     let paramNames = [...Object.entries(dalkBlock.params.value).map(a => a[0])]; // 순서를 보장할 수 없음. 수정 필요.
-    entBlock.params.forEach(entParam => {
+    entBlock.params?.forEach(entParam => {
         if(entParam){
             if(typeof entParam == "object"){
                 dalkBlock.setParam(paramNames[i] || "_targetVal", toDalkBlock(entParam, _target, project, entId));
@@ -51,7 +51,7 @@ var toDalkBlock = (entBlock, _target: Thing, project: Project, entId) => {
             i++;
         }
     });
-    entBlock.statements.forEach(entBlockGroup => {
+    entBlock.statements?.forEach(entBlockGroup => {
         if(entBlockGroup){
             dalkBlock.setParam(paramNames[i], toDalkBlockGroup(entBlockGroup, _target, project, entId));
         }
@@ -66,7 +66,7 @@ var toDalkThing = (entryObject: typeof test.objects[0], project, entId) => {
     _target.blockGroups = JSON.parse(entryObject.script).map(a => toDalkBlockGroup(a, _target, project, entId));
     return _target;
 }
-import test from "./test"
+import type test from "./test"
 let toDalkProject = (entProject: typeof test) => {
     let project = new Project;
     let entryClone = entry;
@@ -119,9 +119,9 @@ let toDalkProject = (entProject: typeof test) => {
                         pack.blocks.value[`func_dalk__${packID}__${key}`] = new Block({
                             name: `func_dalk__${packID}__${key}`,
                             template: `{ ${Template.parseReturnType(targetDalkBlock.template.template, targetDalkBlock.pack).content} → (_targetVal) }`,
-                            func: async ({_targetVal, ...params}, project, local) => {
+                            func: async ({_targetVal, ...params}, project, local, platform) => {
                                 const variable = local.getVariable(_targetVal);
-                                variable.value = await targetDalkBlock.func(params, project, local);
+                                variable.value = await targetDalkBlock.func(params, project, local, platform);
                             }
                         });
                     }else{

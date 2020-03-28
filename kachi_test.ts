@@ -8,5 +8,8 @@ project.run({
     Entry: {
         project: test as any,
         idList
+    },
+    backend: {
+        port: Number(process.env.PORT) || 8080,
     }
 });
